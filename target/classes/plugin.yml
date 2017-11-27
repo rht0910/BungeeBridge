@@ -1,0 +1,10 @@
+name: BungeeBridge
+main: tk.rht0910.bungeebridge.BungeeBridge
+version: "0.0.1-SNAPSHOT"
+author: "rht0910(tomeito0110)"
+depend: [TomeitoLib]
+
+commands:
+	servers:
+		description: Shows Bungee Servers and Teleport.
+		usage: /<command>
