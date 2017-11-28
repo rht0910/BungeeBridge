@@ -5,6 +5,6 @@ author: "rht0910(tomeito0110)"
 depend: [TomeitoLib]
 
 commands:
-	servers:
-		description: Shows Bungee Servers and Teleport.
-		usage: /<command>
+    servers:
+        description: Shows Bungee Servers and Teleport.
+        usage: /<command>
