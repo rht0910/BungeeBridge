@@ -1,5 +1,6 @@
 package tk.rht0910.bungeebridge.providers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -19,16 +20,16 @@ public abstract class GuiProvider {
 	public static ItemMeta im = is.getItemMeta();
 	private static char altColorChar = '&';
 
-	@SuppressWarnings("null")
 	public static boolean open(Player player) {
 		try {
+			BungeeBridge.getServers(player);
 			gui = Bukkit.createInventory(null, 9, BungeeBridge.guiTitle);
-			for(int i=0; i < BungeeBridge.show.length; i++) {
-				BungeeBridge.getIp(player, BungeeBridge.show[1]);
+			for(int i=0; i< BungeeBridge.show.length; i++) {
+				BungeeBridge.getIp(player, BungeeBridge.show[i]);
 				if(BungeeBridge.checkServer(BungeeBridge.ip, BungeeBridge.port)) {
 					ConfigProvider.load(BungeeBridge.show[i], BungeeBridge.show[i]);
-					im.setDisplayName(ChatColor.translateAlternateColorCodes(altColorChar, "&n" + BungeeBridge.show[i]));
-					List<String> lore = null;
+					im.setDisplayName(ChatColor.translateAlternateColorCodes(altColorChar, "&r&n" + BungeeBridge.show[i]));
+					List<String> lore = new ArrayList<String>();
 					lore.add(ChatColor.translateAlternateColorCodes(altColorChar, "&aOnline"));
 					im.setLore(lore);
 					is.setItemMeta(im);
@@ -39,6 +40,8 @@ public abstract class GuiProvider {
 		} catch(Throwable e) {
 			Log.error("An error occurred. Stack Trace dumped below:");
 			e.printStackTrace();
+			Log.error("Caused by:");
+			e.getCause().printStackTrace();
 			return false;
 		}
 		return true;
