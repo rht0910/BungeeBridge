@@ -4,26 +4,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import tk.rht0910.bungeebridge.BungeeBridge;
+import tk.rht0910.tomeito_core.utils.Log;
 
-public abstract class Transporter {
-	private static CommandSender sender = null;
-	private static String[] args = null;
+public class Transporter {
+	private static Player sender = null;
+	private static String args = null;
+	Class<?> clazz = BungeeBridge.class;
 
-	public Transporter(CommandSender sender, String[] args) {
-		Transporter.sender = sender;
-		Transporter.args = args;
+	public Transporter(Player player, String arg) {
+		Transporter.sender = player;
+		Transporter.args = arg;
 	}
 
-	public static boolean jump() {
-		String server = args[0];
+	public boolean jump() {
+		String server = args;
 		if(sender instanceof Player){
-			if(args.length == 0){
-				return false;
-			}
 
 			Player p = (Player)sender;
 
@@ -31,13 +29,17 @@ public abstract class Transporter {
             DataOutputStream out = new DataOutputStream(b);
             try {
                 out.writeUTF("ConnectOther");
-                out.writeUTF(sender.getName());
+                out.writeUTF(p.getName());
                 out.writeUTF(server);
             } catch (IOException ex) {
                 // Impossible
+				Log.error("Stack trace:");
+				ex.printStackTrace();
+				Log.error("Caused by:");
+				ex.getCause().printStackTrace();
             }
 
-			p.sendPluginMessage(BungeeBridge.getPlugin(BungeeBridge.class), "BungeeCord", b.toByteArray());
+			p.sendPluginMessage(((BungeeBridge) BungeeBridge.getProvidingPlugin(clazz)), "BungeeCord", b.toByteArray());
 			return true;
 		}
 

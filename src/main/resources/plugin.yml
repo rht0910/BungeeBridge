@@ -1,6 +1,6 @@
 name: BungeeBridge
 main: tk.rht0910.bungeebridge.BungeeBridge
-version: "0.0.1-SNAPSHOT"
+version: "0.0.2-SNAPSHOT"
 author: "rht0910(tomeito0110)"
 depend: [TomeitoLib]
 

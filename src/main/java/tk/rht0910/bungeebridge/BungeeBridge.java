@@ -1,7 +1,5 @@
 package tk.rht0910.bungeebridge;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -32,6 +30,7 @@ import com.google.common.io.ByteStreams;
 
 import tk.rht0910.bungeebridge.providers.ConfigProvider;
 import tk.rht0910.bungeebridge.providers.GuiProvider;
+import tk.rht0910.bungeebridge.transport.Transporter;
 import tk.rht0910.tomeito_core.utils.Log;
 
 public class BungeeBridge extends JavaPlugin implements PluginMessageListener, Listener {
@@ -41,8 +40,15 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 	public static String[] exclude = null;
 	public static Object[] excludeobj = null;
 	public static String[] show = null;
-	public static String ip = null;
-	public static int port = 4;
+	public static ArrayList<String> ip = new ArrayList<String>();
+	public static ArrayList<Integer> port = new ArrayList<Integer>();
+	public static ArrayList<String> name = new ArrayList<String>();
+	public static String[] ipa = null;
+	public static Integer[] porta = null;
+	public static String[] namea = null;
+	public static Object[] ipobj = null;
+	public static Object[] portobj = null;
+	public static Object[] nameobj = null;
 
 	@Override
 	public void onEnable() {
@@ -54,13 +60,13 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 			BungeeBridge.this.getConfig().options().copyDefaults(true);
 			BungeeBridge.this.saveConfig();
 			Log.info("Initializing");
-			Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-			Bukkit.getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
+			this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+			this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
 			Log.info("Scheduling tasks...");
 			new BukkitRunnable() {
 				@Override
 				public void run() {
-					BungeeBridge.getServers(Bukkit.getPlayer("notch"));
+					BungeeBridge.this.getServers(Bukkit.getPlayer("notch"));
 				}
 			}.runTaskTimer(this, 1200, 600);
 			//Log.info("Running tasks...");
@@ -83,8 +89,9 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if(args.length == 0) {
 			if(sender instanceof Player) {
-				BungeeBridge.getServers((Player) sender);
-				GuiProvider.open((Player)sender);
+				this.getServers((Player) sender);
+				GuiProvider gp = new GuiProvider();
+				gp.open((Player)sender);
 			}
 		} else if(args[0].equalsIgnoreCase("registerevent")) {
 			sender.sendMessage(ChatColor.GREEN + "イベントを登録しています... | Event registering...");
@@ -134,10 +141,20 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 			Object[] showobj = showservers.toArray();
 			show = Arrays.asList(showobj).toArray(new String[showobj.length]);
 		} else if(subchannel.equals("ServerIP")) {
-			String servername = in.readUTF(); // Never use, get only.
-			ip = in.readUTF();
-			port = in.readUnsignedShort();
+			name.add(in.readUTF());
+			ip.add(in.readUTF());
+			port.add(in.readUnsignedShort());
+			ipobj = ip.toArray();
+			portobj = port.toArray();
+			nameobj = name.toArray();
+			ipa = Arrays.asList(ipobj).toArray(new String[ipobj.length]);
+			porta = Arrays.asList(portobj).toArray(new Integer[portobj.length]);
+			namea = Arrays.asList(nameobj).toArray(new String[nameobj.length]);
 		}
+	}
+
+	public void send(Player player, byte[] bytearray) {
+		player.sendPluginMessage(this, "BungeeCord", bytearray);
 	}
 
 	public void getCount(Player player, String server) {
@@ -145,7 +162,6 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 		if (server == null) {
 			server = "ALL";
 		}
-
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		out.writeUTF("PlayerCount");
 		out.writeUTF(server);
@@ -154,21 +170,21 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 
 	}
 
-	public static void getServers(Player player) {
+	public void getServers(Player player) {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		out.writeUTF("GetServers");
-		player.sendPluginMessage(BungeeBridge.getProvidingPlugin(BungeeBridge.class), "BungeeCord", out.toByteArray());
+		player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
 	}
 
-	public static void getIp(Player player, String srv) {
+	public void getIp(Player player, String srv) {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		out.writeUTF("ServerIP");
 		out.writeUTF(srv);
 
-		player.sendPluginMessage(BungeeBridge.getProvidingPlugin(BungeeBridge.class), "BungeeCord", out.toByteArray());
+		player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
 	}
 
-	public static boolean checkServer(String ip, int port) {
+	public boolean checkServer(String ip, int port) {
 		Socket s = new Socket();
 		try {
 			s.connect(new InetSocketAddress(ip, port), 100);
@@ -186,8 +202,9 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 			ItemStack i = (ItemStack) event.getItem();
 			String name = i.getItemMeta().hasDisplayName() ? ( i.getItemMeta()).getDisplayName() : i.getType().toString().replace("_", " ").toLowerCase();
 			if((i == new ItemStack(Material.COMPASS)) && (name == ChatColor.GREEN + "サーバー一覧")) {
-				BungeeBridge.getServers((Player) event.getPlayer());
-				GuiProvider.open((Player)event.getPlayer());
+				this.getServers((Player) event.getPlayer());
+				GuiProvider gp = new GuiProvider();
+				gp.open((Player)event.getPlayer());
 			}
 		}
 	}
@@ -198,21 +215,8 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 		ItemStack c = event.getCurrentItem();
 		Inventory i = event.getInventory();
 		if(i.getName().equals(GuiProvider.gui.getName())) {
-			ByteArrayOutputStream b = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream(b);
-			Bukkit.broadcastMessage(c.getItemMeta().getDisplayName());
-			try {
-				out.writeUTF("Connect");
-				out.writeUTF(c.getItemMeta().getDisplayName().replace("§r§n", ""));
-			} catch (IOException ex) {
-				// Impossible
-				Log.error(ChatColor.RED + "Catched impossible error. The plugin is may not be stable!");
-				Log.error("Stack trace:");
-				ex.printStackTrace();
-				Log.error("Caused by:");
-				ex.getCause().printStackTrace();
-			}
-			p.sendPluginMessage(this, "BungeeCord", b.toByteArray());
+			Transporter t = new Transporter((Player)event.getWhoClicked(), c.getItemMeta().getDisplayName().replace("§r§n", ""));
+			t.jump();
 			event.setCancelled(true);
 			p.closeInventory();
 		}
