@@ -27,23 +27,34 @@ public class GuiOpen implements Runnable {
 	private static char altColorChar = '&';
 	private static int setCount = 0;
 	private static boolean run = true;
-	Class<?> clazz = BungeeBridge.class;
 	private Player player;
 
 	public void getServers() {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		out.writeUTF("GetServers");
-		((BungeeBridge) BungeeBridge.getProvidingPlugin(clazz)).send(player, out.toByteArray());
+		BungeeBridge.getPlugin().send(player, out.toByteArray());
 	}
 
 	public void run() {
 		player = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
 		getServers();
-		gui = Bukkit.createInventory(null, 9, BungeeBridge.guiTitle);
+		gui = Bukkit.createInventory(null, 27, BungeeBridge.guiTitle);
+		for(String name : BungeeBridge.namea) {
+			Log.info("Name: " + name);
+		}
+		for(Integer port : BungeeBridge.porta) {
+			Log.info("Port: " + port);
+		}
+		for(String ip : BungeeBridge.ipa) {
+			Log.info("IP: " + ip);
+		}
+		for(String valid : BungeeBridge.show) {
+			Log.info("Valid: " + valid);
+		}
 		for(int i=0; i< BungeeBridge.show.length; i++) {
 			Log.info("Checking for " + BungeeBridge.show[i]);
 			synchronized (this) {
-				((BungeeBridge) BungeeBridge.getProvidingPlugin(clazz)).getIp(player, BungeeBridge.show[i]);
+				BungeeBridge.getPlugin().getIp(player, BungeeBridge.show[i]);
 				for(String exc : BungeeBridge.exclude) {
 					if(BungeeBridge.namea[i] == exc) {
 						Log.info("Excluding " + exc);
@@ -56,10 +67,10 @@ public class GuiOpen implements Runnable {
 					Log.info("Name Array: " + BungeeBridge.namea[i]);
 					Log.info("IP Address: " + BungeeBridge.ipa[i]);
 					Log.info("Port info: " + BungeeBridge.porta[i]);
-					if(((BungeeBridge) BungeeBridge.getProvidingPlugin(clazz)).checkServer(BungeeBridge.ipa[i], BungeeBridge.porta[i])) {
+					if(BungeeBridge.getPlugin().checkServer(BungeeBridge.ipa[i], BungeeBridge.porta[i])) {
 
 
-						//Bukkit.broadcastMessage("Server is now online: " + BungeeBridge.show[i]);
+						Log.info("Server is now online: " + BungeeBridge.show[i]);
 						ConfigProvider.load(BungeeBridge.show[i], BungeeBridge.show[i]);
 						im.setDisplayName(ChatColor.translateAlternateColorCodes(altColorChar, "&r&n" + BungeeBridge.show[i]));
 						List<String> lore = new ArrayList<String>();

@@ -35,6 +35,7 @@ import tk.rht0910.tomeito_core.utils.Log;
 
 public class BungeeBridge extends JavaPlugin implements PluginMessageListener, Listener {
 	private char altColorChar = '&';
+	public static BungeeBridge instance;
 	public static String guiTitle = null;
 	public static int count = 1;
 	public static String[] exclude = null;
@@ -52,37 +53,63 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 
 	@Override
 	public void onEnable() {
+		Log.info("Initializing...");
+		try {
+			instance = this;
+			guiTitle = ChatColor.translateAlternateColorCodes(altColorChar, (String) ConfigProvider.load("guiTitle", "&8|&a利用可能なサーバー|Available servers&8|").toString());
+			this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+			this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
+		} catch (Throwable e) { onError(e, "Error while initializing", false); }
 		Log.info("Loading configuration");
 		try {
-			guiTitle = ChatColor.translateAlternateColorCodes(altColorChar, (String) ConfigProvider.load("guiTitle", "&8|&a利用可能なサーバー|Available servers&8|").toString());
 			excludeobj = this.getConfig().getList("exclude").toArray();
 			exclude = Arrays.asList(excludeobj).toArray(new String[excludeobj.length]);
 			BungeeBridge.this.getConfig().options().copyDefaults(true);
 			BungeeBridge.this.saveConfig();
-			Log.info("Initializing");
-			this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-			this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
-			Log.info("Scheduling tasks...");
+		} catch (Throwable e) { onError(e, "Error while loading configuration", true); }
+		Log.info("Scheduling tasks...");
+		try {
 			new BukkitRunnable() {
 				@Override
 				public void run() {
-					BungeeBridge.this.getServers(Bukkit.getPlayer("notch"));
+					BungeeBridge.this.getServers(Bukkit.getPlayerExact("notch"));
 				}
 			}.runTaskTimer(this, 1200, 600);
 			//Log.info("Running tasks...");
 			//Log.info(" - getServers");
 			//BungeeBridge.getServers(Bukkit.getPlayer("notch"));
-			Log.info("Registering events");
+		} catch(Throwable e) { onError(e, "Error while scheduling tasks", false); }
+		Log.info("Registering events");
+		try {
 			Bukkit.getPluginManager().registerEvents(this, this);
-			Log.info("Enabled");
-		} catch(Throwable e) {
-			Log.error("An error occurred. stacktrace dumped below:");
-			e.printStackTrace();
-			Log.error("Get cause:");
-			e.getCause().printStackTrace();
-			Log.error("The plugin is can't enabling, disabling.");
+		} catch (Throwable e) { onError(e, "Error while registering events", false); }
+			Log.info("Enabled plugin by tomeito0110.");
+	}
+
+	/**
+	 *
+	 * Used in when exception / error.
+	 *
+	 * @param e Throwable(NOT Exception!)
+	 * @param message Error Message
+	 * @param disable Disabling plugin if flag is on
+	 */
+	public void onError(Throwable e, String message, Boolean disable) {
+		Log.error("ErrorMessage: " + message);
+		Log.error("An error occurred. stacktrace dumped below:");
+		e.printStackTrace();
+		Log.error("Get cause:");
+		e.getCause().printStackTrace();
+		if(disable) { // Disabling if disable flag is on
+			Log.error("Disabling...");
 			Bukkit.getPluginManager().disablePlugin(Bukkit.getPluginManager().getPlugin("BungeeBridge"));
 		}
+	}
+
+	@Override
+	public void onDisable() {
+		Log.info("Disabling BungeeBridge...");
+		Log.info("Disabled BungeeBridge by tomeito0110.");
 	}
 
 	@Override
@@ -155,6 +182,10 @@ public class BungeeBridge extends JavaPlugin implements PluginMessageListener, L
 
 	public void send(Player player, byte[] bytearray) {
 		player.sendPluginMessage(this, "BungeeCord", bytearray);
+	}
+
+	public static final BungeeBridge getPlugin() {
+		return instance;
 	}
 
 	public void getCount(Player player, String server) {
